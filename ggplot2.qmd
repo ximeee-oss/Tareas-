@@ -1,0 +1,217 @@
+---
+title: GGplot2
+author: Saray Cabra 
+date: "2026-04-5"
+format:
+  html:
+    theme: 
+      light: flatly
+      dark: darkly
+    toc: true
+    toc_float: true
+    number-sections: true
+    code-fold: show
+    code-tools: true
+    code-copy: hover
+    code-overflow: wrap
+    embed-resources: true
+reference-location: margin
+lang : es
+---
+```{r}
+library(ggplot2)
+library(C50)
+```
+```{r}
+students <- data.frame(
+ id = 1:20,
+ hours_study = c(2,3,4,5,6,3,4,7,8,5,6,7,3,2,9,10,4,6,8,5),
+ score = c(50,55,65,70,75,60,66,80,85,72,74,78,58,52,90,95,67,76,88,73),
+ gender = rep(c("Male","Female"), 10),
+ major = rep(c("Engineering","Business","Arts","Science"), 5))
+```
+
+```{r}
+sales <- data.frame(
+  month = rep(c("Jan","Feb","Mar","Apr"), 3),
+  sales = c(100,120,130,150, 90,110,115,140, 80,95,100,120),
+  marketing_spend = c(20,25,30,35, 15,20,22,30, 10,15,18,25),
+  region = rep(c("North","South","West"), each = 4)
+)
+```
+# Visualización de datos de estudiantes
+## Scatter plot (horas vs puntaje)
+Analice la relación entre horas de estudio y puntaje obtenido
+```{r}
+ggplot(students, aes(x = hours_study, y = score, color = gender)) +
+  geom_point(size = 3) +
+  geom_smooth(method = "lm", se = FALSE, color = "black") +
+  labs(
+    title = "Relación entre horas de estudio y puntaje",
+    x = "Horas de estudio",
+    y = "Puntaje"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
+    axis.text = element_text(size = 12),
+    panel.grid.major = element_line(color = "gray80")
+  )
+```
+- Existe una relación positiva: a más horas de estudio, mayor puntaje 
+- La línea de regresión confirma tendencia lineal 
+- Diferencias por género no parecen muy marcadas
+
+## Boxplot por género
+Compare la distribución de puntajes entre géneros
+```{r}
+ggplot(students, aes(x = gender, y = score, fill = gender)) +
+  geom_boxplot(alpha = 0.7) +
+  labs(
+    title = "Distribución de puntajes por género",
+    x = "Género",
+    y = "Puntaje"
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "none",
+    plot.title = element_text(hjust = 0.5)
+  )
+```
+- Permite ver mediana, rango y valores atípicos.
+- Si las cajas son similares → rendimiento comparable.
+- Diferencias en dispersión indican variabilidad.
+
+## Histograma de puntajes
+Analice la distribución de los puntajes.
+```{r}
+ggplot(students, aes(x = score)) +
+  geom_histogram(bins = 8, fill = "steelblue", color = "black") +
+  labs(
+    title = "Distribución de puntajes",
+    x = "Puntaje",
+    y = "Frecuencia"
+  ) +
+  theme_minimal()
+```
+- Permite ver si los datos son simétricos o sesgados.
+- Aquí se observa concentración en valores medios-altos.
+
+## Faceting por carrera
+Analice la relación horas–puntaje por carrera.
+```{r}
+ggplot(students, aes(hours_study, score)) +
+  geom_point(color = "darkblue", size = 2) +
+  facet_wrap(~major) +
+  labs(
+    title = "Horas de estudio vs puntaje por carrera"
+  ) +
+  theme_minimal()
+```
+- Permite comparar patrones entre carreras.
+- Algunas carreras pueden mostrar mayor eficiencia (menos horas, mayor puntaje).
+
+# Visualización de ventas (Business)
+```{r}
+sales <- data.frame(
+ month = rep(month.abb[1:12], 4),
+ region = rep(c("North","South","East","West"), each = 12),
+ sales = c(
+ 120,130,125,140,150,160,170,165,155,145,135,125,
+ 100,110,105,120,130,135,140,138,132,125,118,110,
+ 90,95,100,110,115,120,125,123,118,112,105,98,
+ 80,85,88,95,100,105,110,108,102,97,90,85
+ ),
+ marketing_spend = c(
+ 20,22,21,23,25,26,28,27,26,24,23,22,
+ 18,19,18,20,22,23,24,23,22,21,20,19,
+ 15,16,17,18,19,20,21,20,19,18,17,16,
+ 12,13,14,15,16,17,18,17,16,15,14,13
+ ),
+ employees = rep(c(50,45,40,35), each = 12))
+```
+## Scatter: marketing vs ventas
+Evalúe si el gasto en marketing impacta las ventas.
+```{r}
+ggplot(sales, aes(marketing_spend, sales, color = region)) +
+  geom_point(size = 3) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(
+    title = "Ventas vs Inversión en Marketing",
+    x = "Gasto en marketing",
+    y = "Ventas"
+  ) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+- Relación positiva clara.
+- Algunas regiones responden mejor al marketing.
+
+## Serie temporal
+Analice la evolución de ventas a lo largo del tiempo.
+
+```{r}
+ggplot(sales, aes(month, sales, group = region, color = region)) +
+  geom_line(size = 1) +
+  geom_point() +
+  labs(
+    title = "Evolución mensual de ventas",
+    x = "Mes",
+    y = "Ventas"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+- Identifica tendencias y estacionalidad.
+- Comparación clara entre regiones.
+
+## Boxplot por región
+```{r}
+ggplot(sales, aes(region, sales, fill = region)) +
+  geom_boxplot() +
+  labs(title = "Distribución de ventas por región") +
+  theme_minimal() +
+  theme(legend.position = "none")
+```
+- Regiones con mayor mediana = mejor desempeño.
+- Detecta variabilidad y estabilidad.
+
+# Customer Churn
+```{r}
+churn <- data.frame(
+  tenure = c(1,5,10,12,24,36,48,60,72,3,6,9,15,18,30,42,54,66,70,8),
+  monthly_charges = c(70,75,80,85,90,95,100,105,110,65,72,78,82,88,92,98,102,108,112,76),
+  total_charges = c(70,375,800,1020,2160,3420,4800,6300,7920,195,432,702,1230,1584,2760,4116,5508,7128,7840,6),
+  churn = rep(c("Yes","No"), 10),
+  contract = rep(c("Month-to-month","One year","Two year","Month-to-month"), 5),
+  internet_service = rep(c("DSL","Fiber optic","DSL","No"), 5)
+)
+print(churn)
+```
+## Scatter + churn
+Analice la relación entre antigüedad y cargos mensuales.
+```{r}
+ggplot(churn, aes(tenure, monthly_charges, color = churn)) +
+  geom_point(size = 3, alpha = 0.7) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(
+    title = "Relación entre antigüedad y cargos mensuales",
+    x = "Antigüedad (meses)",
+    y = "Cargos mensuales"
+  ) +
+  theme_minimal()
+```
+- Clientes con menor antigüedad tienden a abandonar más.
+- Diferencias de comportamiento entre churn “Yes” y “No”.
+
+#  Telco Customer Churn (Kaggle Dataset)
+
+```{r}
+ggplot(churn, aes(x = tenure, y = monthly_charges, color = churn)) +
+  geom_point(alpha = 0.4) +
+  geom_smooth(se = FALSE) +
+  theme_minimal() +
+  labs(title = "Customer Churn Analysis",
+       x = "Customer Tenure",
+       y = "Monthly Charges")
+```

@@ -1,0 +1,193 @@
+---
+title: EJERCICIOS Dplyr
+author: Saray Cabra 
+date: "2026-04-5"
+format:
+  html:
+    theme: 
+      light: flatly
+      dark: darkly
+    toc: true
+    toc_float: true
+    number-sections: true
+    code-fold: show
+    code-tools: true
+    code-copy: hover
+    code-overflow: wrap
+    embed-resources: true
+reference-location: margin
+lang : es
+---
+```{r}
+library(dplyr)
+library(gapminder)
+library(tidyr)
+```
+## Seleccionar columnas específicas
+```{r}
+gapminder %>%
+  select(country, year, lifeExp)
+```
+- Se reduce el dataset a solo las variables importantes para analizar la esperanza de vida por país y año.
+
+## Filtrar año 2007
+```{r}
+gapminder %>%
+  filter(year == 2007)
+```
+- Obtiene los datos más recientes del dataset.
+
+## Filtrar países de Asia
+```{r}
+gapminder %>%
+  filter(continent == "Asia")
+```
+- Analiza solo países asiáticos.
+
+## Esperanza de vida > 70
+```{r}
+gapminder %>%
+  filter(lifeExp > 70)
+```
+- Identifica países con alto nivel de vida.
+
+## Orden ascendente por esperanza de vida
+```{r}
+gapminder %>%
+  arrange(lifeExp)
+```
+- Muestra países desde menor a mayor esperanza de vida.
+
+## Orden descendente por PIB per cápita
+```{r}
+gapminder %>%
+  arrange(desc(gdpPercap))
+```
+- Identifica los países más ricos primero.
+
+## Crear nueva variable (PIB total)
+```{r}
+gapminder %>%
+  mutate(gdp_total = gdpPercap * pop)
+```
+- Calcula el PIB total del país.
+
+## Países con población > 100 millones en 2007
+```{r}
+gapminder %>%
+  filter(year == 2007, pop > 100000000)
+```
+- Identifica países muy poblados en 2007.
+
+## Países de Europa con columnas específicas
+```{r}
+gapminder %>%
+  filter(continent == "Europe") %>%
+  select(country, gdpPercap)
+```
+- Muestra riqueza por país europeo.
+## Promedio de esperanza de vida por continente
+```{r}
+gapminder %>%
+  group_by(continent) %>%
+  summarise(avg_lifeExp = mean(lifeExp))
+```
+- Compara calidad de vida entre continentes.
+
+## Promedio de PIB por continente y año
+```{r}
+gapminder %>%
+  group_by(continent, year) %>%
+  summarise(avg_gdpPercap = mean(gdpPercap))
+```
+- Evolución económica por región.
+
+## Máxima esperanza de vida por continente
+```{r}
+gapminder %>%
+  group_by(continent) %>%
+  summarise(max_lifeExp = max(lifeExp))
+```
+- País más longevo de cada continente.
+
+## Número de países por continente
+```{r}
+gapminder %>%
+  group_by(continent) %>%
+  summarise(n_countries = n_distinct(country))
+```
+- Número de países únicos.
+
+## Población total por continente
+```{r}
+gapminder %>%
+  group_by(continent) %>%
+  summarise(total_pop = sum(pop))
+```
+- Tamaño poblacional por región.
+
+## América: promedio de vida por año
+```{r}
+gapminder %>%
+  filter(continent == "Americas") %>%
+  group_by(year) %>%
+  summarise(avg_lifeExp = mean(lifeExp))
+```
+- Evolución de la calidad de vida en América.
+
+## Top 10 países con mayor PIB per cápita en 2007
+```{r}
+gapminder %>%
+  filter(year == 2007) %>%
+  arrange(desc(gdpPercap)) %>%
+  slice_head(n = 10)
+```
+- Países más ricos en ese año.
+
+## País con mayor esperanza de vida por año
+```{r}
+gapminder %>%
+  group_by(year) %>%
+  slice_max(lifeExp, n = 1)
+```
+- Líder en longevidad cada año.
+
+## Mediana del PIB por continente
+```{r}
+gapminder %>%
+  group_by(continent) %>%
+  summarise(median_gdpPercap = median(gdpPercap))
+```
+- Valor típico de riqueza.
+
+## Cambio en esperanza de vida (1952–2007)
+```{r}
+gapminder %>%
+  filter(year %in% c(1952, 2007)) %>%
+  select(country, year, lifeExp) %>%
+  tidyr::pivot_wider(names_from = year, values_from = lifeExp) %>%
+  mutate(change_lifeExp = `2007` - `1952`)
+```
+- Mide el progreso en salud.
+
+## Top 5 países con mayor crecimiento de PIB
+```{r}
+gapminder %>%
+  filter(year %in% c(1952, 2007)) %>%
+  select(country, year, gdpPercap) %>%
+  tidyr::pivot_wider(names_from = year, values_from = gdpPercap) %>%
+  mutate(change_gdp = `2007` - `1952`) %>%
+  arrange(desc(change_gdp)) %>%
+  slice_head(n = 5)
+```
+- Países con mayor crecimiento económico.
+
+## BONUS
+```{r}
+gapminder %>% 
+  filter(year == 2007) %>% 
+  group_by(continent) %>% 
+  summarise(avg_lifeExp = mean(lifeExp)) %>% 
+  arrange(desc(avg_lifeExp))
+```
+- Ranking de continentes por calidad de vida en 2007.

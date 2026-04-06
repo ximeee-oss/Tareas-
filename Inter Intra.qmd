@@ -1,0 +1,128 @@
+---
+title: Intervarianza intravarianza
+author: Saray Cabra 
+date: "2026-04-06"
+format:
+  html:
+    theme: 
+      light: flatly
+      dark: darkly
+    toc: true
+    toc_float: true
+    number-sections: true
+    code-fold: show
+    code-tools: true
+    code-copy: hover
+    code-overflow: wrap
+    embed-resources: true
+reference-location: margin
+lang : es
+---
+# Definición de los datos en R
+```{r}
+manana <- c(40, 35, 38, 36, 41)
+tarde  <- c(38, 35, 30, 29)
+noche  <- c(31, 25, 26)
+
+grupo <- c(rep("Manana", length(manana)),
+           rep("Tarde", length(tarde)),
+           rep("Noche", length(noche)))
+
+valores <- c(manana, tarde, noche)
+datos <- data.frame(grupo, valores)
+datos
+```
+## Explicación:
+- Se crean tres vectores con los datos de cada grupo
+- Se construye un vector grupo para identificar a qué grupo pertenece cada dato
+- Se combinan todos los datos en un data.frame, que facilita el análisis
+
+```{r}
+library(dplyr)
+```
+
+# MEDIA GENERAL
+- Promedio total de todas las notas.
+```{r}
+media_total <- mean(datos$valores)
+media_total
+```
+## Explicación:
+- Se calcula el promedio de todos los valores
+- Representa el valor central del conjunto completo de datos
+
+# MEDIA POR GRUPO
+- Mañana ≈ 38
+- Tarde ≈ 33
+- Noche ≈ 27.3
+```{r}
+medias_grupo <- datos %>%
+  group_by(grupo) %>%
+  summarise(media = mean(valores),
+            n = n())
+
+medias_grupo
+```
+## Explicación:
+- group_by(grupo): agrupa los datos por categoría
+- mean(valores): calcula la media de cada grupo
+- n(): cuenta cuántos datos hay en cada grupo
+- Esto permite comparar los promedios entre grupos.
+
+# INTRAVARIANZA
+- Mide la variabilidad dentro de cada grupo.
+```{r}
+intra <- datos %>%
+  group_by(grupo) %>%
+  summarise(var = var(valores),
+            n = n()) %>%
+  summarise(intra = sum(var * n) / sum(n))
+
+intra
+```
+## Explicación:
+- Primero se calcula la varianza de cada grupo
+- Luego se hace un promedio ponderado según el tamaño del grupo
+
+# INTERVARIANZA
+- Mide la diferencia entre grupos.
+```{r}
+inter <- medias_grupo %>%
+  mutate(diff = (media - media_total)^2) %>%
+  summarise(inter = sum(diff * n) / sum(n))
+
+inter
+```
+## Explicación:
+- Se calcula la diferencia entre cada media de grupo y la media total
+- Se eleva al cuadrado para evitar valores negativos
+- Se pondera por el tamaño del grupo
+
+# VARIANZA TOTAL
+- Representa la dispersión total del conjunto de datos, incluye tanto la variación interna como la diferencia entre grupos.
+```{r}
+var_total <- var(datos$valores)
+var_total
+```
+## Explicación:
+- Se calcula la varianza considerando todos los datos juntos
+- Representa la variabilidad total del conjunto
+
+# VERIFICACIÓN
+- Si todo está bien, este valor ≈ var_total.
+```{r}
+intra$intra + inter$inter
+```
+## Explicación:
+- Se suma la intravarianza y la intervarianza
+- Este valor debe ser aproximadamente igual a la varianza total
+
+# GRÁFICO 
+```{r}
+boxplot(valores ~ grupo, data = datos,
+        main = "Comparación de grupos",
+        col = c("lightblue", "lightgreen", "lightpink"))
+```
+## Explicación:
+- Permite visualizar la distribución de los datos por grupo
+- Ayuda a identificar diferencias y dispersión
